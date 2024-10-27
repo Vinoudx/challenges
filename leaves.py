@@ -164,11 +164,13 @@ indexx = data.getIndex()
 
 def train():
     data = TrainData()
-    train_loader = DataLoader(data, batch_size=16, shuffle=True)
+    train_loader = DataLoader(data, batch_size=64, shuffle=True)
     # data_pre = Test_Data()
     # pred_loader = DataLoader(data_pre, batch_size=1, shuffle=False)
 
-    model = ResNet(Bottleneck, [3, 4, 6, 3], 176).cuda()
+    # model = ResNet(Bottleneck, [3, 4, 6, 3], 176).cuda()
+    check_point = 0
+    model = torch.load(f"./classify-leaves/{check_point}.pth")
     loss_func = nn.CrossEntropyLoss()
     optim = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -184,6 +186,8 @@ def train():
             l.backward()
             optim.step()
             eopch_loss.append(l)
+
+        i += check_point
         print(f"epoch{i}, loss{sum(eopch_loss) / len(eopch_loss)}")
         torch.save(model, f"./classify-leaves/{i}.pth")
 
@@ -192,7 +196,7 @@ def train():
 
 
 def pred():
-    model = torch.load("./classify-leaves/35.pth")
+    model = torch.load("./classify-leaves/50.pth")
     model.eval()
     data_pre = TestData()
     pred_loader = DataLoader(data_pre, batch_size=1, shuffle=False)
@@ -212,5 +216,5 @@ def pred():
         df.to_csv("./classify-leaves/submission.csv", mode='a', index=False, header=False)
 
 # model = ResNet(Bottleneck, [3, 4, 6, 3], 176).cuda()
-
+# train()
 pred()
