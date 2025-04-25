@@ -4,7 +4,6 @@ from torch import nn
 from torch.nn import MSELoss
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import KFold
-import numpy as np
 
 
 class Price_Data(Dataset):
