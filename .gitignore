@@ -3,3 +3,5 @@
 /banana-detection
 banana-detection.zip
 test.py
+/.venv
+.idea
