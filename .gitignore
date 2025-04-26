@@ -5,3 +5,4 @@ banana-detection.zip
 test.py
 /.venv
 .idea
+*/__pycache__
