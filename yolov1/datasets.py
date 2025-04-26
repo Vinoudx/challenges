@@ -1,8 +1,11 @@
 import torch
+import torchvision.transforms
 from torch.utils.data import Dataset, DataLoader
 import cv2 as cv
 import os
 import pandas as pd
+import numpy as np
+from torchvision import transforms
 
 from utils import *
 
@@ -15,6 +18,7 @@ class image_datas(Dataset):
         self.C = 20
         self.images = []
         self.labels = []
+        self.transform = torchvision.transforms.Compose(transforms=[transforms.ToTensor()])
         data_root_path = os.path.join(root_path, 'bananas_{}'.format(type))
         image_root_path = os.path.join(data_root_path, 'images')
         label_path = os.path.join(data_root_path, "label.csv")
@@ -23,9 +27,8 @@ class image_datas(Dataset):
         for image_name in image_names:
             image_path = os.path.join(image_root_path, image_name)
             image = cv.imread(image_path)
-            image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+            #image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
-            self.images.append(image)
             # image (3*256*256)
             # labels: (num_objs, class, x, y, w, h)
             # label: (class, xmin, ymin, xmax, ymax)
@@ -38,9 +41,11 @@ class image_datas(Dataset):
             h = (label[..., 4] - label[..., 2]) / image_height
 
             image = cv.resize(image, (224, 224))
-            self.labels.append(torch.cat([label[..., 0], x, y, w, h]))
+            image = self.transform(image)
             # self.labels (s*s*(c+5*b))
-            # print(torch.cat([label[..., 0], x, y, w, h]))
+            self.labels.append(torch.cat([label[..., 0], x, y, w, h]))
+
+            self.images.append(image)
 
     def __getitem__(self, item):
         class_type, x, y, w, h = self.labels[item].tolist()
@@ -52,7 +57,7 @@ class image_datas(Dataset):
         label[i, j, 20 + bias] = 1
         label[i, j, 21 + bias:25 + bias] = torch.tensor([x_cell, y_cell, width_cell, height_cell])
         label[i, j, int(class_type)] = 1
-        print(x_cell, y_cell, width_cell, height_cell)
+        # print(x_cell, y_cell, width_cell, height_cell)
         return self.images[item], label
 
     def __len__(self):
@@ -67,7 +72,7 @@ if __name__ == "__main__":
     box = label[box_index]
     t = torch.nn.Flatten(start_dim=0, end_dim=-1)(label).unsqueeze(0)
     b = pred_to_bbox(t)
-    #print(b.shape)
+    # print(b.shape)
     print(b)
 
     b = b.reshape([-1, 6])
@@ -90,6 +95,3 @@ if __name__ == "__main__":
             cv.rectangle(image, (int(tlx), int(tly)), (int(brx), int(bry)), (0, 0, 255))
             cv.imshow("1", image)
             cv.waitKey(10000)
-
-
-
