@@ -4,6 +4,8 @@ import cv2 as cv
 import os
 import pandas as pd
 
+from utils import *
+
 
 class image_datas(Dataset):
     def __init__(self, root_path, type="train"):
@@ -60,19 +62,34 @@ class image_datas(Dataset):
 if __name__ == "__main__":
     a = image_datas('../banana-detection/')
     image, label = a.__getitem__(0)
-    # x, y, w, h = label[..., 21:25]
-    #
-    # image_width, image_height, _ = image.shape
-    # xx = x * image_width
-    # yy = y * image_height
-    # ww = w * image_width
-    # hh = h * image_height
-    #
-    # tlx = xx - ww / 2
-    # tly = yy - hh / 2
-    # brx = xx + ww / 2
-    # bry = yy + hh / 2
-    # print(image_width, image_height, x, tlx, y, tly, w, brx, h, bry)
-    # cv.rectangle(image, (int(tlx), int(tly)), (int(brx), int(bry)), (0, 0, 255))
-    # cv.imshow("1", image)
-    # cv.waitKey(10000)
+
+    box_index = label[..., 20] != 0
+    box = label[box_index]
+    t = torch.nn.Flatten(start_dim=0, end_dim=-1)(label).unsqueeze(0)
+    b = pred_to_bbox(t)
+    #print(b.shape)
+    print(b)
+
+    b = b.reshape([-1, 6])
+    for i in b:
+        if i[1] > 0.5:
+            print(i)
+            x, y, w, h = i[..., 2:6]
+
+            image_width, image_height, _ = image.shape
+            xx = x * image_width
+            yy = y * image_height
+            ww = w * image_width
+            hh = h * image_height
+
+            tlx = xx - ww / 2
+            tly = yy - hh / 2
+            brx = xx + ww / 2
+            bry = yy + hh / 2
+            print(image_width, image_height, x, tlx, y, tly, w, brx, h, bry)
+            cv.rectangle(image, (int(tlx), int(tly)), (int(brx), int(bry)), (0, 0, 255))
+            cv.imshow("1", image)
+            cv.waitKey(10000)
+
+
+
